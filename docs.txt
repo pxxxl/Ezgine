@@ -1,0 +1,17 @@
+
+class Ezgine
+
+the only interface to the outside world
+give it object and let it move, get the objects attibutes whenever you like
+before using, create a object of Ezgine like this:
+//Ezgine engine;
+
+    1.PutObject(MassPoint)
+    use this function like this:
+    //engine.PutObject(wef)
+
+    2.Step()
+    the physicle engine won't move automatically, you use this function and it will 
+    step once
+
+    3.
