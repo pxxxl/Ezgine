@@ -18,4 +18,5 @@ field吸附在masspoint上面，但是masspoint不知道
 6返回对象池
 
 field masspoint cob的联系：
-
+我想再添加一个Entity类，包含一个masspoint（必须），一个collapsebox（非必须），多个forcefield（非必须）
+然后所有函数都操作Entity
