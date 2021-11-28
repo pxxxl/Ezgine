@@ -5,7 +5,9 @@
 
 using namespace std;
 
-
+static const MassPoint CMASSPOINT = MassPoint(0, 0, 0);
+static const CollisionBox CCOLLISIONBOX = CollisionBox();
+static const ForceField CFORCEFIELD = ForceField();
 
 class Ezgine{
 public:
@@ -29,11 +31,10 @@ public:
     ObjectPool(){}
     void AddObject(MassPoint&);
     void AddField(ForceField&);
-    list<MassPoint> GetObjects();
+    list<MassPoint> GetObjects(){return this->pointpool;}
     MassPoint& GetObjectsById(int);
-    list<ForceField> GetFields();
+    list<ForceField> GetFields(){return this->fieldpool;}
     ForceField& GetFieldsById(int);
-    int GetFieldAttachedToObject(int);
     void DeleteObjectById(int);
     void DeleteFieldByid(int); 
 protected:
@@ -53,12 +54,16 @@ private:
 class MoveControler{
 public:
     MoveControler(){}
-    
+    void Move(ObjectPool&);
 protected:
 private:
 };
 
-
+class ForceFieldControler{
+    public:
+    protected:
+    private:
+};
 
 //below entities
 class MassPoint{
@@ -94,7 +99,6 @@ protected:
     double center_y;
     double bounce_rate;
 private:
-
 };
 class CollisionBox_Round : public CollisionBox{
 public:
@@ -112,12 +116,13 @@ private:
 
 class ForceField{
 public:
-    virtual pair<double, double> force(int,int){}
+    virtual pair<double, double> force(const MassPoint&){};
     int GetId(){return id;}
+    int GetAttach_id(){return attach_id;}
 protected:
-    int type;
     int id;
+    int attach_id;
 private:
 };
-
+//comp
 #endif

@@ -29,9 +29,10 @@ MassPoint& ObjectPool::GetObjectsById(int id1){
             sign = 1;
             break;
         }
+        be++;
     }
     if(sign == 0){
-        return 0;
+        return CMASSPOINT;
     }else{
         return (*be);
     }
@@ -45,19 +46,44 @@ ForceField& ObjectPool::GetFieldsById(int id1){
             sign = 1;
             break;
         }
+        be++;
     }
     if(sign == 0){
-        return 0;
+        return CFORCEFIELD;
     }else{
         return (*be);
     }
 }
-int ObjectPool::GetFieldAttachedToObject(int){
-
-}
 void ObjectPool::DeleteObjectById(int id1){
-
+    auto be = pointpool.begin();
+    auto en = pointpool.end();
+    int sign = 0;
+    while(be!=en){
+        if(((*be).GetId())==id1){
+            be = pointpool.erase(be);
+            en = pointpool.end();
+        }else{
+            be++;
+        }
+    }
 }
-void ObjectPool::DeleteFieldByid(int){
+void ObjectPool::DeleteFieldByid(int id1){
+    auto be = fieldpool.begin();
+    auto en = fieldpool.end();
+    int sign = 0;
+    while(be!=en){
+        if(((*be).GetId())==id1){
+            be = fieldpool.erase(be);
+            en = fieldpool.end();
+        }else{
+            be++;
+        }
+    }
+}
+
+//CollapseControler
+
+//MoveControler
+void MoveControler::Move(ObjectPool&){
 
 }
