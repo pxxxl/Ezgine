@@ -7,18 +7,18 @@ using namespace std;
 
 class Ezgine{
 public:
-    Ezgine():objectpool(ObjectPool()),collapsecontroler(CollapseControler())
-    ,movecontroler(MoveControler()){}
+    Ezgine():objectpool(ObjectPool()){}
     int PutObjectGetId(Entity&);
     void Step();
     void DeleteObjectById(int);
+    list<pair<Entity, Entity> > RoughCollapseJudge(ObjectPool&);
+    list<pair<Entity, Entity> > ExactCollaspeJudge(list<pair<Entity, Entity> >);
+    void Collapse(list<pair<Entity, Entity> >);
+    void Move(ObjectPool&);
 protected:
 private:
-    Ezgine(const Ezgine&):objectpool(ObjectPool()),collapsecontroler(CollapseControler())
-    ,movecontroler(MoveControler()){}
+    Ezgine(const Ezgine&):objectpool(ObjectPool()){}
     ObjectPool& objectpool;
-    CollapseControler& collapsecontroler;
-    MoveControler& movecontroler;
 };
 
 class ObjectPool{
@@ -34,40 +34,14 @@ protected:
 private:
 };
 
-class CollapseControler{
-public:
-    CollapseControler(){}
-    list<pair<Entity, Entity> > RoughCollapseJudge(ObjectPool&);
-    list<pair<Entity, Entity> > ExactCollaspeJudge(list<pair<Entity, Entity> >);
-    void Collapse(list<pair<Entity, Entity> >);
-protected:
-private:
-};
-
-class MoveControler{
-public:
-    MoveControler(){}
-    void Move(ObjectPool&);
-protected:
-private:
-};
-
-class ForceFieldControler{
-    friend Ezgine;
-public:
-protected:
-
-private:
-};
-
 //below entities
 class Entity{
 public:
-    Entity(){};
+    Entity();
     virtual ~Entity(){}
-    Entity(const Entity&){};
     void Move();
     int GetMass(){return masspoint.GetMass();}
+    int AddForceField(ForceField& FF){forcefields.push_back(FF);ffid_alloc++;return (ffid_alloc-1);}
     double GetX(){return masspoint.GetX();}
     double GetY(){return masspoint.GetY();}
     double GetVX(){return masspoint.GetVY();}
@@ -76,29 +50,39 @@ public:
     double GetFY(){return masspoint.GetFY();}
     const list<ForceField>& GetForceFields(){return forcefields;}
     const CollisionBox& GetCollisionBox(){return collisionbox;}
-    void AddFoeceField(ForceField ff){forcefields.push_back(ff);}
     void DeleteForceFieldById(int id);
     void AddFX(double FX){masspoint.AddFX(FX);}
     void AddFY(double FY){masspoint.AddFY(FY);}
     void EditVX(double VX){masspoint.EditVX(VX);}
     void EditVY(double VY){masspoint.EditVY(VY);}
+    void SetMPType(int type){masspoint.SetType(type);}
+    void SetCBType(int type){collisionbox.SetType(type);}
+    void SetMPType(int type){masspoint.SetType(type);}
+    virtual void ReceiveBroadcast(){};
 protected:
-private:
+
+    int AllocFFid(){ffid_alloc++; return(ffid_alloc-1);}
+    Entity(const Entity&){};
+    static int id_alloc;
+    int id;
+    int ffid_alloc = 0;
     MassPoint masspoint;
     CollisionBox collisionbox;
     list<ForceField> forcefields;
+private:
 };
 class MassPoint{
     friend Entity;
 public:
 protected:
     MassPoint(int m, int x, int y):mass(m),coordinate_x(x),coordinate_y(y),
-        velocity_x(0), velocity_y(0), tem_force_x(0), tem_force_y(0){}
-    MassPoint(const MassPoint&){}
+        velocity_x(0), velocity_y(0), tem_force_x(0), tem_force_y(0),father(Entity()){}
+    MassPoint(const MassPoint&):father(Entity()){}
     MassPoint():mass(65535),coordinate_x(0),coordinate_y(0),
-    velocity_x(0), velocity_y(0), tem_force_x(0), tem_force_y(0){}
+    velocity_x(0), velocity_y(0), tem_force_x(0), tem_force_y(0),father(Entity()){}
     virtual ~MassPoint(){}
     int GetMass(){return mass;}
+    int GetType(){return type;}
     double GetX(){return coordinate_x;}
     double GetY(){return coordinate_y;}
     double GetVX(){return velocity_x;}
@@ -109,7 +93,11 @@ protected:
     void AddFY(double FY){tem_force_y+=FY;}
     void EditVX(double VX){velocity_x = VX;}
     void EditVY(double VY){velocity_y = VY;}
+    void SetType(int type){this->type = type;}
+
+    Entity& father;
     int mass;
+    int type;
     double coordinate_x;
     double coordinate_y;
     double velocity_x;
@@ -119,13 +107,19 @@ protected:
 private:
 };
 class CollisionBox{
+    friend Entity;
 public:
-    CollisionBox(){};
-    CollisionBox(const CollisionBox&){}
-    virtual ~CollisionBox(){};
-    virtual void OnCollisionExtraReaction();
-    virtual int GetType(){return 0;}
 protected:
+    CollisionBox():father(Entity()){};
+    CollisionBox(const CollisionBox&):father(Entity()){}
+    CollisionBox(Entity& entity):father(entity){}
+    virtual ~CollisionBox(){};
+    virtual int GetShape(){return 0;}
+    int GetType(){return type;}
+    void SetType(int type){this->type = type;}
+
+    Entity& father;
+    int shape;
     int type;
     double center_x;
     double center_y;
@@ -135,7 +129,7 @@ private:
 class CollisionBox_Round : public CollisionBox{
 public:
     int GetRadious(){return radious;}
-    virtual int GetType(){return 1;}
+    virtual int GetShape(){return 1;}
 protected:
     int radious;
 private:
@@ -144,24 +138,23 @@ class CollisionBox_Rectangle : public CollisionBox{
 public:
     int GetWidth(){return width;}
     int GetHeight(){return height;}
-    virtual int GetType(){return 2;}
+    virtual int GetShape(){return 2;}
 protected:
     int width;
     int height;
 private:
 };
-
 class ForceField{
+    friend Entity;
 public:
-    virtual pair<double, double> force(const Entity&){};
-    int GetId(){return id;}
-    int GetAttach_id(){return attach_id;}
-    void AttachEntity(int id);
 protected:
-    static int id_num;
+    virtual int CreateFF(Entity& entity){ForceField FF(entity);return entity.AddForceField(FF);}
+    virtual pair<double, double> force(const Entity&){};
+    Entity& father;
     int id;
-    int attach_id;
 private:
+    ForceField():father(Entity()){}
+    ForceField(Entity& entity):father(entity){}
+    ForceField(const ForceField&):father(Entity()){}
 };
-//comp
 #endif

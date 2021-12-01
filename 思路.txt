@@ -2,10 +2,6 @@
 
 cmasspoint可能会被附着双向力场
 
-总体思路：
-ezgine下面有四个模块，这四个模块之间通过ezgine相互通信
-field吸附在masspoint上面，但是masspoint不知道
-
 全流程：
 1调用step
 2调用FFC，为所有对象施加力，这是分别调用每个力场的函数遍历对象池实现的
@@ -20,3 +16,14 @@ field吸附在masspoint上面，但是masspoint不知道
 field masspoint cob的联系：
 我想再添加一个Entity类，包含一个masspoint（必须），一个collapsebox（非必须），多个forcefield（非必须）
 然后所有函数都操作Entity
+
+我想保证只有engine和entitypool两个类，然后把它们绑定
+entity和mp， cb， ff的关系：
+entity是唯一能直接操纵三者的物体，外界必须向entity发送信息而不是直接操作三元素
+mp是entity的主体
+cb也是entity必须有的一部分，但是因为type的声明，碰撞箱可以完全不碰撞
+碰撞箱没有独立性，他只是一个边界标识
+ff嘛，enntity可以没有，如果想有，就新建一个再attach
+entity具有极大的独立性
+
+下一步，我得把entity的函数写完，然后开始写entitypool和ezgine
